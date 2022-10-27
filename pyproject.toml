@@ -10,6 +10,7 @@ python = "^3.8"
 fastapi = "^0.85.1"
 uvicorn = {extras = ["standard"], version = "^0.19.0"}
 requests = "^2.28.1"
+sentry-sdk = {extras = ["fastapi"], version = "^1.10.1"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

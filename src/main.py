@@ -5,9 +5,19 @@ import json
 import os
 
 import requests
+import sentry_sdk
 from fastapi import FastAPI, Header, HTTPException, Request
 
 app = FastAPI()
+
+
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN"),
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production,
+    traces_sample_rate=1.0,
+)
 
 
 @app.get("/")
