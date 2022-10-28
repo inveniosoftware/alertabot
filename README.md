@@ -1,4 +1,6 @@
-# wh-dispatcher
+# alertabot
+
+## Install
 
 Install the dependencies locally:
 
@@ -13,20 +15,20 @@ docker build -t wh-dispatcher .
 docker run -it wh-dispatcher
 ```
 
-### Tests
+## Playing around
 
-Run tests:
-
-```bash
-poetry run pytest
-```
-
-### Playing around
-
-To mimick an arriving payload:
+To mimick an incoming payload:
 
 ```bash
 curl -X 'POST' \
   'http://http://0.0.0.0:8000/webhook/1' \
   -d '{"42": "your_json_data_should_go_here"}'
+```
+
+## Test
+
+Run tests:
+
+```bash
+poetry run pytest
 ```
