@@ -1,15 +1,12 @@
-import hashlib
-import hmac
 import http
 import json
 import os
 
 import requests
 import sentry_sdk
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request, Response
 
 app = FastAPI()
-
 
 sentry_sdk.init(
     dsn=os.environ.get("SENTRY_DSN"),
@@ -19,18 +16,10 @@ sentry_sdk.init(
     traces_sample_rate=1.0,
 )
 
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-def generate_hash_signature(
-    secret: bytes,
-    payload: bytes,
-    digest_method=hashlib.sha1,
-):
-    return hmac.new(secret, payload, digest_method).hexdigest()
+# Basic heartbeat endpoint
+@app.get("/health")
+def ping():
+    return {"42": "foo"}
 
 
 def parse_harbor_event(payload):
@@ -47,21 +36,31 @@ def parse_harbor_event(payload):
     return event
 
 
-@app.post("/webhook/1", status_code=http.HTTPStatus.ACCEPTED)
-async def webhook(request: Request, x_hub_signature: str = Header(None)):
+# The endpoint here is built using the WEBHOOK_TOKEN from env and should be kept secret
+@app.post(
+    f'/webhook/{os.environ.get("WEBHOOK_TOKEN")}',
+    status_code=http.HTTPStatus.ACCEPTED,
+)
+async def webhook(request: Request, response: Response):
     payload = await request.body()
-    secret = os.environ.get("WEBHOOK_SECRET").encode("utf-8")
     target = os.environ.get("DISCORD_TARGET").encode("utf-8")
 
     # Decode incoming request
     json_payload = json.loads(payload)
 
-    event = parse_harbor_event(json_payload)
+    try:
+        event = parse_harbor_event(json_payload)
+    except Exception:
+        # If we can't parse the payload as an Harbor event, return a Bad Request
+        response.status_code = 400
+        return {"outcome": "Malformed payload"}
 
+    # The message to be posted on Discord
     msg_content = f"""
     Event **{event["type"]}** coming from **{event["repo"]}**
     """
 
+    # Prepare the Discord "embeds"
     if event["type"] == "SCANNING_COMPLETED":
         vuln_embed = {
             "title": "Vulnerabilities found",
@@ -72,7 +71,7 @@ async def webhook(request: Request, x_hub_signature: str = Header(None)):
     else:
         embeds = []
 
-    # Prepare payload to post to Discord
+    # Prepare final payload to sent to the Discord webhook
     message = {
         "username": "Harbor",
         "avatar_url": "https://goharbor.io/img/logos/harbor-icon-color.png",
@@ -81,7 +80,10 @@ async def webhook(request: Request, x_hub_signature: str = Header(None)):
     }
 
     # Post to the target webhook
-    x = requests.post(target, json=message)
+    discord_response = requests.post(target, json=message)
 
-    print(x.content)
-    return {"ecoci"}
+    # Return success and wrap the response from Discord
+    return {
+        "outcome": "success",
+        "discord_data": {"status_code": discord_response.status_code},
+    }
