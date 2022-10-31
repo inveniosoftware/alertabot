@@ -1,7 +1,7 @@
 FROM python:3.9
 
 # Metadata
-LABEL name="wh-dispatcher"
+LABEL name="altertabot"
 LABEL maintainer="avivace4@gmail.com"
 LABEL version="0.1".0
 
@@ -41,4 +41,3 @@ RUN poetry config virtualenvs.create false \
 
 # Launch main python script
 CMD ["uvicorn", "src.main:app", "--reload", "--env-file", "secrets.txt", "--port", "8000", "--host", "0.0.0.0"]
-# CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "core.app:app"]

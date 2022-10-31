@@ -12,7 +12,7 @@ Or run it with docker:
 
 ```bash
 docker build -t wh-dispatcher .
-docker run -it wh-dispatcher
+docker run -p 8000:8000 -it wh-dispatcher
 ```
 
 ## Playing around
