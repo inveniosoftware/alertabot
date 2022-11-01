@@ -1,0 +1,8 @@
+altertabot:
+  checkHostname: true
+  hostname: alertabot.web.cern.ch
+  image: gitlab-registry.cern.ch/digitalmemory/openshift-deploy/alertabot
+
+route:
+  enabled: true
+  tls: true

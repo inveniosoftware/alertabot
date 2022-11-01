@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertabot-webapi
+  labels:
+    run: alertabot-webapi
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+  selector:
+    app: alertabot-webapi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertabot-webapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertabot-webapi
+  template:
+    metadata:
+      labels:
+        app: alertabot-webapi
+    spec:
+      containers:
+        - name: alertabot-webapi
+          image: {{ .Values.altertabot.image }}
+          command: ["sh"]
+          args: ["-c", "uvicorn src.main:app"]
+          envFrom:
+            - configMapRef:
+                name: env
+            - secretRef:
+                name: alertabot-secrets
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always
+
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - mountPath: /etc/nginx/conf.d
+              name: nginx-config
+              readOnly: true
+            - mountPath: /var/cache/nginx
+              name: nginx-cache
+            - mountPath: /var/run
+              name: var-run
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+        - name: nginx-cache
+          emptyDir: {}
+        - name: var-run
+          emptyDir: {}
+      restartPolicy: Always
