@@ -1,9 +1,9 @@
 FROM python:3.9
 
 # Metadata
-LABEL name="altertabot"
+LABEL name="alertabot"
 LABEL maintainer="avivace4@gmail.com"
-LABEL version="0.1".0
+LABEL version="0.1.0"
 
 ARG YOUR_ENV="virtualenv"
 
